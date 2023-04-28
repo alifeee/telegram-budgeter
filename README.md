@@ -16,3 +16,17 @@ For Google Sheets integration, many python modules are available ([gspread], [gs
 [gsheets]: https://pypi.org/project/gsheets/
 [pygsheets]: https://pypi.org/project/pygsheets/
 [EZSheets]: https://pypi.org/project/EZSheets/
+
+## Setup
+
+### Set up environment
+
+```bash
+python3 -m venv env
+```
+
+### Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
