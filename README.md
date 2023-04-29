@@ -55,3 +55,17 @@ Credentials are stored in `google_credentials.json`. Follow the [gspread "Servic
 ```
 
 [gspread-guide]: https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
+
+## Telegram Credentials
+
+To obtain an access token for telegram, see [help page](https://github.com/python-telegram-bot/python-telegram-bot/wiki/Introduction-to-the-API), but in essence, talk to the [BotFather](https://t.me/botfather).
+
+The access token is used via an environment variable, or a `.env` file, which is not tracked by git.
+
+```bash
+touch .env
+```
+
+```.env
+TELEGRAM_BOT_ACCESS_TOKEN=...
+```

@@ -3,4 +3,5 @@
 **__pycache__**
 
 # secrets
-google_credentials.json
+/google_credentials.json
+/.env
