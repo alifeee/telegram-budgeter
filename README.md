@@ -17,7 +17,7 @@ For Google Sheets integration, many python modules are available ([gspread], [gs
 [pygsheets]: https://pypi.org/project/pygsheets/
 [EZSheets]: https://pypi.org/project/EZSheets/
 
-## Setup
+## Commands
 
 ### Set up environment
 
@@ -31,7 +31,14 @@ python3 -m venv env
 pip install -r requirements.txt
 ```
 
-## Credentials
+### Test
+
+```bash
+pytest
+ptw # Run with watch
+```
+
+## Google Credentials
 
 Credentials are stored in `google_credentials.json`. Follow the [gspread "Service Account" guide][gspread-guide] to set up a service account and download the credentials JSON file.
 
