@@ -30,3 +30,21 @@ python3 -m venv env
 ```bash
 pip install -r requirements.txt
 ```
+
+## Credentials
+
+Credentials are stored in `google_credentials.json`. Follow the [gspread "Service Account" guide][gspread-guide] to set up a service account and download the credentials JSON file.
+
+```json
+{
+  "type": "service_account",
+  "project_id": "telegram-budgeter",
+  "private_key_id": "[PRIVATE KEY ID]",
+  "private_key": "[PRIVATE KEY]",
+  "client_email": "...@....gserviceaccount.com",
+  "client_id": "[CLIENT ID]",
+  ...
+}
+```
+
+[gspread-guide]: https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
