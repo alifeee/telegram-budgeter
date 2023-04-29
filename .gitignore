@@ -1,2 +1,5 @@
 # python
 /env
+
+# secrets
+google_credentials.json
