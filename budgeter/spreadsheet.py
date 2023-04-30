@@ -21,9 +21,8 @@ class Spreadsheet:
     A class to connect to the Google Sheets API and view/edit spreadsheets.
     """
 
-    def __init__(self, credentials: SpreadsheetCredentials, spreadsheet_id: str):
-        self.spreadsheet = credentials.gspread_credentials.open_by_key(
-            spreadsheet_id)
+    def __init__(self, credentials: SpreadsheetCredentials, spreadsheet_url: str):
+        self.spreadsheet = credentials.gspread_credentials.open_by_url(spreadsheet_url)
 
     def get_cols(self, column_numbers: list, ignore_first_row=False):
         """Gets the specified columns as a 2d array.

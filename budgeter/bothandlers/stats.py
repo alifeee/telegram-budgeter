@@ -3,7 +3,7 @@ import telegram
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 import pandas
-from gspread.exceptions import APIError
+from gspread.exceptions import APIError, NoValidUrlKeyFound
 
 
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_credentials: SpreadsheetCredentials):
@@ -12,7 +12,7 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_
         SPREADSHEET_ID = context.user_data["spreadsheet_id"]
     except KeyError:
         await message.edit_text(
-            "No spreadsheet ID found. Please create a spreadsheet first. /start",
+            "No spreadsheet URL found. Please create a spreadsheet first. /start",
         )
         return
     
@@ -21,7 +21,7 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_
     except APIError as e:
         await message.edit_text(
             f"""
-Error getting spreadsheet with ID:
+Error getting spreadsheet with URL:
 `{SPREADSHEET_ID}`
             
 Check that the spreadsheet exists and that the bot has access to it\.
@@ -31,6 +31,20 @@ Change the spreadsheet ID with /start
             parse_mode="MarkdownV2"
         )
         return
+    
+    except NoValidUrlKeyFound:
+        await message.edit_text(f"""
+Could not find a valid spreadsheet ID in the URL:
+`{SPREADSHEET_ID}`
+
+Please check that the URL is correct and that it contains a valid spreadsheet ID\.
+
+Change the spreadsheet ID with /start
+        """,
+        parse_mode="MarkdownV2"
+        )
+        return
+    
     cols = spreadsheet.get_cols([1, 2])
     df = pandas.DataFrame(cols[1:], columns=['Date', 'Spend'])
     df['Date'] = pandas.to_datetime(df['Date'], format='%d/%m/%Y')

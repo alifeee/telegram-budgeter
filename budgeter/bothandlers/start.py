@@ -29,7 +29,7 @@ async def create_spreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
-        "Please enter the spreadsheet ID.",
+        "Please enter the spreadsheet URL.",
     )
     return GIVING_SPREADSHEET_ID
 
@@ -38,7 +38,7 @@ async def give_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE
     spreadsheet_id = update.effective_message.text
     context.user_data["spreadsheet_id"] = spreadsheet_id
     await update.effective_message.reply_text(
-        "Spreadsheet ID received! You can now start logging your spending.",
+        "Spreadsheet URL received! You can now start logging your spending.",
         reply_markup=ReplyKeyboardRemove(),
     )
     return ConversationHandler.END

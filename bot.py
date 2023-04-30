@@ -33,7 +33,7 @@ async def get_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
     except KeyError:
         await update.effective_message.reply_text(
-            "No spreadsheet ID found. Please create a spreadsheet first. /start",
+            "No spreadsheet URL found. Please create a spreadsheet first. /start",
         )
         return
 
