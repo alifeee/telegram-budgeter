@@ -1,7 +1,7 @@
 """Tests for spreadsheet.py."""
 import unittest
 from unittest.mock import patch, MagicMock
-from spreadsheet import Spreadsheet
+from spreadsheet import SpreadsheetCredentials, Spreadsheet
 
 
 class TestSpreadsheet(unittest.TestCase):
@@ -14,7 +14,8 @@ class TestSpreadsheet(unittest.TestCase):
             ['01/01/2021', '£10.00', 'Food'],
             ['02/01/2021', '£20.00', 'Travel']
         ]
-        spreadsheet = Spreadsheet("credentials_path", "spreadsheet_id")
+        credentials = SpreadsheetCredentials("credentials_path")
+        spreadsheet = Spreadsheet(credentials, "spreadsheet_id")
         # spreadsheet.spreadsheet.sheet1.col_values(i) returns a different column for each i
         columns = [
             ['Date', '01/01/2021', '02/01/2021'],
