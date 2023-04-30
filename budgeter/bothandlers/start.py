@@ -16,10 +16,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     return CHOOSING_SHEET_MODE
 
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.effective_message.reply_text(
+        "Cancelled.",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return ConversationHandler.END
 
 async def create_spreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
-        "Please create a spreadsheet and confirm when you're done.",
+        "Please create a spreadsheet and confirm when you're done",
         reply_markup=ReplyKeyboardMarkup(
             [["Confirm"]], one_time_keyboard=True, is_persistent=True, resize_keyboard=True,
         ),
@@ -29,7 +35,8 @@ async def create_spreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
-        "Please enter the spreadsheet URL.",
+        "Please enter the spreadsheet URL",
+        reply_markup=ReplyKeyboardRemove(),
     )
     return GIVING_SPREADSHEET_ID
 
@@ -67,5 +74,8 @@ start_handler = ConversationHandler(
             ),
         ],
     },
-    fallbacks=[CommandHandler("start", start)],
+    fallbacks=[
+        CommandHandler("start", start),
+        CommandHandler("cancel", cancel),
+        ],
 )
