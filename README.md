@@ -68,12 +68,15 @@ To obtain an access token for telegram, see [help page](https://github.com/pytho
 
 The access token is used via an environment variable, or a `.env` file, which is not tracked by git.
 
+Also in the environment should be an "admin ID", where errors are sent via the error handler.
+
 ```bash
 touch .env
 ```
 
 ```.env
 TELEGRAM_BOT_ACCESS_TOKEN=...
+ADMIN_USER_ID=...
 ```
 
 ## Persistent data

@@ -11,6 +11,7 @@ from budgeter.bothandlers.help import help_handler
 from budgeter.bothandlers.start import start_handler
 from budgeter.bothandlers.stats import get_stats_handler
 from budgeter.bothandlers.privacy import privacy_handler
+from budgeter.bothandlers.errorHandler import error_handler
 
 load_dotenv()
 try:
@@ -55,6 +56,9 @@ def main():
     application.add_handler(CommandHandler(
         "get_spreadsheet_id", get_spreadsheet_id)
     )
+
+    application.add_error_handler(error_handler)
+    
     application.run_polling()
 
 
