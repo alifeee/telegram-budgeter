@@ -41,7 +41,7 @@ ptw # Run with watch
 ### Run
 
 ```bash
-python ./src/main.py
+python ./bot.py
 ```
 
 ## Google Credentials

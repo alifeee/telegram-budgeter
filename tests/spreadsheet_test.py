@@ -1,11 +1,13 @@
-"""Tests for spreadsheet.py."""
 import unittest
 from unittest.mock import patch, MagicMock
-from spreadsheet import SpreadsheetCredentials, Spreadsheet
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from budgeter.spreadsheet import SpreadsheetCredentials, Spreadsheet
 
 
 class TestSpreadsheet(unittest.TestCase):
-    @patch('spreadsheet.gspread.service_account')
+    @patch('gspread.service_account')
     def test_get_cols(self, mock_gspread_service_account):
         mock_gspread_service_account.return_value = MagicMock()
         # arrange
