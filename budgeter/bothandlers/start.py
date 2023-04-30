@@ -36,7 +36,7 @@ async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT
 
 async def give_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     spreadsheet_id = update.effective_message.text
-    context.user_data["spreadsheet_id"] = spreadsheet_id
+    context.user_data["spreadsheet_url"] = spreadsheet_id
     await update.effective_message.reply_text(
         "Spreadsheet URL received! You can now start logging your spending.",
         reply_markup=ReplyKeyboardRemove(),

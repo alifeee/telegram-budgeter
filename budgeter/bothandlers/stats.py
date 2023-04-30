@@ -4,51 +4,62 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 import pandas
 from gspread.exceptions import APIError, NoValidUrlKeyFound
+import re
 
+
+def openSpreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_credentials: SpreadsheetCredentials):
+    try:
+        SPREADSHEET_URL = context.user_data["spreadsheet_url"]
+    except KeyError:
+        return None, "No spreadsheet URL found. Please create or link a spreadsheet first. /start"
+    
+    try:
+        spreadsheet = Spreadsheet(spreadsheet_credentials, SPREADSHEET_URL)
+    except NoValidUrlKeyFound as e:
+        return None, f"""
+I can't find a spreadsheet with the link:
+<pre>{SPREADSHEET_URL}</pre>
+            
+Is the link correct? If not, change it with /start.
+"""
+    except APIError as e:
+        return None, f"""
+I can't access the spreadsheet with the link:
+<pre>{SPREADSHEET_URL}</pre>
+
+Do I have access? If not, use /start for instructions on how to give me access.
+"""
+    return spreadsheet, None
+
+def parseData(data: list):
+    """data is a 2d array"""
+    df = pandas.DataFrame(data, columns=['Date', 'Spend'])
+    df['Date'] = pandas.to_datetime(df['Date'], format='%d/%m/%Y')
+    df['Spend'] = df['Spend'].map(lambda x: re.sub(r'[^0-9\.]', '', x))
+    df['Spend'] = pandas.to_numeric(df['Spend'])
+    return df
 
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_credentials: SpreadsheetCredentials):
     message = await update.message.reply_text("Getting stats...")
-    try:
-        SPREADSHEET_ID = context.user_data["spreadsheet_id"]
-    except KeyError:
-        await message.edit_text(
-            "No spreadsheet URL found. Please create a spreadsheet first. /start",
-        )
+    spreadsheet, error = openSpreadsheet(update, context, spreadsheet_credentials)
+    if error:
+        await message.edit_text(error, parse_mode="HTML")
         return
-    
-    try:
-        spreadsheet = Spreadsheet(spreadsheet_credentials, SPREADSHEET_ID)
-    except APIError as e:
-        await message.edit_text(
-            f"""
-Error getting spreadsheet with URL:
-`{SPREADSHEET_ID}`
-            
-Check that the spreadsheet exists and that the bot has access to it\.
 
-Change the spreadsheet ID with /start
-""",
-            parse_mode="MarkdownV2"
-        )
-        return
-    
-    except NoValidUrlKeyFound:
+    try:
+        cols = spreadsheet.get_cols([1, 2])
+        df = parseData(cols[1:])
+        average = df['Spend'].mean()
+    except Exception as e:
         await message.edit_text(f"""
-Could not find a valid spreadsheet ID in the URL:
-`{SPREADSHEET_ID}`
+Error processing spreadsheet. Ask @alifeeerenn why. :)
 
-Please check that the URL is correct and that it contains a valid spreadsheet ID\.
-
-Change the spreadsheet ID with /start
-        """,
-        parse_mode="MarkdownV2"
+(Error: {e})
+        """
         )
-        return
+        raise e
     
-    cols = spreadsheet.get_cols([1, 2])
-    df = pandas.DataFrame(cols[1:], columns=['Date', 'Spend'])
-    df['Date'] = pandas.to_datetime(df['Date'], format='%d/%m/%Y')
-    await message.edit_text(df.to_string())
+    await message.edit_text(f"Average spend: {average:.2f}")
 
 
 def get_stats_handler(credentials: SpreadsheetCredentials):
