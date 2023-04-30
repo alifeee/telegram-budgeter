@@ -10,6 +10,7 @@ from budgeter.spreadsheet import SpreadsheetCredentials
 from budgeter.bothandlers.help import help_handler
 from budgeter.bothandlers.start import start_handler
 from budgeter.bothandlers.stats import get_stats_handler
+from budgeter.bothandlers.privacy import privacy_handler
 
 load_dotenv()
 try:
@@ -48,6 +49,7 @@ def main():
 
     application.add_handler(help_handler)
     application.add_handler(start_handler)
+    application.add_handler(privacy_handler)
     stats_handler = get_stats_handler(credentials)
     application.add_handler(stats_handler)
     application.add_handler(CommandHandler(
