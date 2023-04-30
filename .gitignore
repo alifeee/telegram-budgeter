@@ -5,3 +5,6 @@
 # secrets
 /google_credentials.json
 /.env
+
+# persistent data
+/bot_data.pickle

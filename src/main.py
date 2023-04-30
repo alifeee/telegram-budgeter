@@ -61,10 +61,25 @@ async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT
 
 async def give_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     spreadsheet_id = update.effective_message.text
+    context.user_data["spreadsheet_id"] = spreadsheet_id
     await update.effective_message.reply_text(
-        "Spreadsheet ID received! You can now start logging your spending. Your spreadsheet ID is: " + spreadsheet_id,
+        "Spreadsheet ID received! You can now start logging your spending.",
+        reply_markup=ReplyKeyboardRemove(),
     )
     return ConversationHandler.END
+
+
+async def get_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        spreadsheet_id = context.user_data["spreadsheet_id"]
+        await update.effective_message.reply_text(
+            f"Spreadsheet ID: {spreadsheet_id}",
+        )
+    except KeyError:
+        await update.effective_message.reply_text(
+            "No spreadsheet ID found. Please create a spreadsheet first. /start",
+        )
+        return
 
 
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_credentials: SpreadsheetCredentials):
@@ -82,7 +97,15 @@ def main():
 
     credentials = SpreadsheetCredentials(CREDENTIALS_PATH)
 
-    application = Application.builder().token(API_KEY).build()
+    persistent_data = PicklePersistence(filepath="bot_data.pickle")
+
+    application = Application.builder(
+    ).token(
+        API_KEY
+    ).persistence(
+        persistent_data
+    ).build()
+
     application.add_handler(CommandHandler("help", help))
 
     conversation_handler = ConversationHandler(
@@ -118,6 +141,10 @@ def main():
             "stats",
             lambda update, context: stats(update, context, credentials)
         )
+    )
+
+    application.add_handler(CommandHandler(
+        "get_spreadsheet_id", get_spreadsheet_id)
     )
     application.run_polling()
 

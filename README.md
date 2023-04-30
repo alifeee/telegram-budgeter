@@ -38,6 +38,12 @@ pytest
 ptw # Run with watch
 ```
 
+### Run
+
+```bash
+python ./src/main.py
+```
+
 ## Google Credentials
 
 Credentials are stored in `google_credentials.json`. Follow the [gspread "Service Account" guide][gspread-guide] to set up a service account and download the credentials JSON file.
@@ -68,4 +74,15 @@ touch .env
 
 ```.env
 TELEGRAM_BOT_ACCESS_TOKEN=...
+```
+
+## Persistent data
+
+To store each user's Google Sheet ID, a persistent pickle file is used. This is not tracked by git. This uses the [Persistence API](https://github.com/python-telegram-bot/python-telegram-bot/wiki/Making-your-bot-persistent) from [python-telegram-bot][ptb].
+
+[ptb]: https://github.com/python-telegram-bot/python-telegram-bot/
+
+```python
+persistent_data = PicklePersistence(filepath="bot_data.pickle")
+application = Application.builder().token(API_KEY).persistence(persistent_data).build()
 ```
