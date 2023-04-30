@@ -11,6 +11,7 @@ from budgeter.bothandlers.help import help_handler
 from budgeter.bothandlers.start import start_handler
 from budgeter.bothandlers.stats import get_stats_handler
 from budgeter.bothandlers.privacy import privacy_handler
+from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
 
 load_dotenv()
@@ -27,17 +28,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def get_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    try:
-        spreadsheet_id = context.user_data["spreadsheet_id"]
-        await update.effective_message.reply_text(
-            f"Spreadsheet ID: {spreadsheet_id}",
-        )
-    except KeyError:
-        await update.effective_message.reply_text(
-            "No spreadsheet URL found. Please create a spreadsheet first. /start",
-        )
-        return
 
 
 def main():
@@ -53,12 +43,10 @@ def main():
     application.add_handler(privacy_handler)
     stats_handler = get_stats_handler(credentials)
     application.add_handler(stats_handler)
-    application.add_handler(CommandHandler(
-        "get_spreadsheet_id", get_spreadsheet_id)
-    )
+    application.add_handler(spreadsheet_handler)
 
     application.add_error_handler(error_handler)
-    
+
     application.run_polling()
 
 
