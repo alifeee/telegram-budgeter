@@ -14,6 +14,7 @@ from budgeter.bothandlers.privacy import privacy_handler
 from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
 from budgeter.bothandlers.remind import remind_handler
+import asyncio
 
 load_dotenv()
 try:
@@ -36,6 +37,20 @@ def main():
     credentials = SpreadsheetCredentials(CREDENTIALS_PATH)
 
     persistent_data = PicklePersistence(filepath="bot_data.pickle")
+
+    # user data
+    loop = asyncio.new_event_loop()
+    user_data = loop.run_until_complete(persistent_data.get_user_data())
+    loop.close()
+    for user, data in user_data.items():
+        try:
+            sheet_url = data['spreadsheet_url']
+            reminders_on = data['reminders']
+        except KeyError:
+            continue
+        
+
+
     application = Application.builder().token(
         API_KEY).persistence(persistent_data).build()
 
