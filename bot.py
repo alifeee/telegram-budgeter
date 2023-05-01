@@ -15,6 +15,7 @@ from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
 from budgeter.bothandlers.remind import remind_handler
 import asyncio
+from budgeter.remind import remind
 
 load_dotenv()
 try:
@@ -42,14 +43,6 @@ def main():
     loop = asyncio.new_event_loop()
     user_data = loop.run_until_complete(persistent_data.get_user_data())
     loop.close()
-    for user, data in user_data.items():
-        try:
-            sheet_url = data['spreadsheet_url']
-            reminders_on = data['reminders']
-        except KeyError:
-            continue
-        
-
 
     application = Application.builder().token(
         API_KEY).persistence(persistent_data).build()
@@ -63,6 +56,19 @@ def main():
     application.add_handler(privacy_handler)
 
     application.add_error_handler(error_handler)
+
+    for user, data in user_data.items():
+        try:
+            sheet_url = data['spreadsheet_url']
+            reminders_on = data['reminders']
+        except KeyError:
+            continue
+        if reminders_on:
+            application.job_queue.run_repeating(
+                remind,
+                interval=3000,
+                first = 1
+            )
 
     application.run_polling()
 
