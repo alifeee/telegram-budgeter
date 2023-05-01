@@ -14,6 +14,7 @@ from budgeter.bothandlers.privacy import privacy_handler
 from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
 from budgeter.bothandlers.remind import remind_handler
+from budgeter.bothandlers.unknown import unknown_handler
 import asyncio
 from budgeter.remind import remind
 
@@ -55,6 +56,7 @@ def main():
     application.add_handler(remind_handler)
     application.add_handler(privacy_handler)
 
+    application.add_handler(unknown_handler)
     application.add_error_handler(error_handler)
 
     for user, data in user_data.items():
