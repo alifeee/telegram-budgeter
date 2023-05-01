@@ -17,11 +17,15 @@ greetings = [
     "Bot here",
 ]
 
+def jobname(user: int) -> str:
+    return f"reminder-{user}"
+
 def queue_reminder(job_queue: JobQueue, user: int, run_now: bool = False):
     job_queue.run_daily(
         remind,
         time=datetime.time(hour=10, minute=0),
         chat_id=user,
+        name=jobname(user),
     )
     if run_now:
         job_queue.run_once(
@@ -29,6 +33,11 @@ def queue_reminder(job_queue: JobQueue, user: int, run_now: bool = False):
             when=0,
             chat_id=user,
         )
+
+def cancel_reminder(job_queue: JobQueue, user: int):
+    jobs = job_queue.get_jobs_by_name(jobname(user))
+    for job in jobs:
+        job.schedule_removal()
 
 async def remind(context: ContextTypes.DEFAULT_TYPE):
     try:
