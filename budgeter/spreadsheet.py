@@ -3,6 +3,8 @@ This file is used to connect to the Google Sheets API.
 """
 import gspread
 import pandas
+import re
+import datetime
 
 def verifyurl(url):
     try:
@@ -48,7 +50,34 @@ class Spreadsheet:
         if ignore_first_row:
             return columns_2d[1:]
         return columns_2d
+    
+    def get_parsed_data(self):
+        """Gets the data as a pandas dataframe. The first column is converted to a datetime object, and the second column is stripped and converted to a float.
+        """
+        cols = self.get_cols([1, 2])
+        df = pandas.DataFrame(cols[1:], columns=['Date', 'Spend'])
+        df['Date'] = pandas.to_datetime(df['Date'], format='%d/%m/%Y')
+        df['Spend'] = df['Spend'].map(lambda x: re.sub(r'[^0-9\.]', '', x))
+        df['Spend'] = pandas.to_numeric(df['Spend'])
+        return df
+    
+    def add_data(self, date: datetime.datetime, spend: float):
+        """Adds a row to the spreadsheet.
 
+        Args:
+            date (datetime.datetime): The date to add.
+            spend (float): The spend to add.
+
+        Returns:
+            Dataframe: The dataframe with the new row added.
+        """
+        data = self.get_parsed_data()
+        date_str = date.strftime("%d/%m/%Y")
+        self.spreadsheet.sheet1.append_row(
+            [date_str, spend], 
+            value_input_option=gspread.worksheet.ValueInputOption.user_entered
+        )
+        return self.get_parsed_data()
 
 if __name__ == '__main__':
     # authentication
