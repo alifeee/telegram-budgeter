@@ -4,6 +4,12 @@ This file is used to connect to the Google Sheets API.
 import gspread
 import pandas
 
+def verifyurl(url):
+    try:
+        _ = gspread.utils.extract_id_from_url(url)
+    except gspread.exceptions.NoValidUrlKeyFound:
+        return False
+    return True
 
 class SpreadsheetCredentials:
     """

@@ -1,7 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from gspread.utils import extract_id_from_url
-from gspread.exceptions import NoValidUrlKeyFound
+from ..spreadsheet import verifyurl
 
 async def get_spreadsheet_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -12,9 +11,7 @@ async def get_spreadsheet_url(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         return
     
-    try:
-        _ = extract_id_from_url(spreadsheet_url)
-    except NoValidUrlKeyFound:
+    if not verifyurl(spreadsheet_url):
         await update.message.reply_html(
             f"""
 Your link doesn't look like a Google Sheets link.
