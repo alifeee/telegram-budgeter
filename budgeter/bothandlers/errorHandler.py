@@ -14,11 +14,9 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     try:
         user = update.effective_user
         chat = update.effective_chat
-        message = update.effective_message
     except AttributeError:
         user = "unknown"
         chat = "unknown"
-        message = "unknown"
     await bot.send_message(
         chat_id=ADMIN_ID,
         text=f"""
@@ -28,7 +26,7 @@ User: {user}
 
 Chat: {chat}
 
-Message: {message}
+Update: {update}
 
 Error: {context.error}
         """
@@ -36,5 +34,6 @@ Error: {context.error}
     print(context)
     logger = logging.getLogger(__name__)
     logger.error(
-        f"Update {update} caused error {context.error}"
+        f"Update {update.update_id} caused error {context.error}"
     )
+    # raise context.error
