@@ -10,6 +10,7 @@ from budgeter.spreadsheet import SpreadsheetCredentials
 from budgeter.bothandlers.help import help_handler
 from budgeter.bothandlers.start import start_handler
 from budgeter.bothandlers.stats import get_stats_handler
+from budgeter.bothandlers.spend import get_spend_handler
 from budgeter.bothandlers.privacy import privacy_handler
 from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
@@ -52,6 +53,8 @@ def main():
     application.add_handler(stats_handler)
     application.add_handler(spreadsheet_handler)
     application.add_handler(remind_handler)
+    spend_handler = get_spend_handler(credentials)
+    application.add_handler(spend_handler)
     application.add_handler(privacy_handler)
 
     application.add_handler(unknown_handler)
