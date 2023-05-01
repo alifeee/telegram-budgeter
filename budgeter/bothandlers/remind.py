@@ -9,10 +9,10 @@ async def ask_remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     except KeyError:
         reminders_on = False
     reminders_on_text = "on" if reminders_on else "off"
-    await update.effective_message.reply_text(f"""
+    await update.effective_message.reply_html(f"""
 This bot can remind you at 10am every day to log the previous day's spending. It also prompts you to fill in any missed days.
 
-Your reminders are currently {reminders_on_text}. What do you want to change?
+Your reminders are currently <b>{reminders_on_text}</b>. What do you want to change?
     """,
         reply_markup=ReplyKeyboardMarkup(
             [["Remind me"], ["Don't remind me"]],

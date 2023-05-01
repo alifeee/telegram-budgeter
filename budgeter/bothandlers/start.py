@@ -2,7 +2,7 @@ from telegram import InputMediaPhoto, ReplyKeyboardMarkup, ReplyKeyboardRemove, 
 from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, CommandHandler, filters
 
 
-USER_CHOOSING_SHEET_MODE, USER_CONFIRMING_CREATION, USERGIVING_SPREADSHEET_URL, USER_CONFIRMING_REMINDERS = range(4)
+USER_CHOOSING_SHEET_MODE, USER_CONFIRMING_CREATION, USERGIVING_SPREADSHEET_URL = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -76,35 +76,14 @@ async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT
 async def give_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     spreadsheet_id = update.effective_message.text
     context.user_data["spreadsheet_url"] = spreadsheet_id
-    await update.effective_message.reply_text(
-        "Thanks for the url! To get started, try /stats"
-    )
-    await update.effective_message.reply_text("Would you like me to ask you every morning how much you spent the day before, so you can keep track of spending? I'll also send some statistics each time.",
-        reply_markup=ReplyKeyboardMarkup(
-            [["Yes"], ["No"]], 
-            one_time_keyboard=True, 
-            is_persistent=True, 
-            resize_keyboard=True,
-        )
-    )
-    return USER_CONFIRMING_REMINDERS
+    await update.effective_message.reply_text("""
+Thanks! To get started, try /stats
 
-async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data["reminders"] = True
-    await update.effective_message.reply_text(
-        "I'll remind you to log your spending every day at 10am. If you want to change this, use /remind",
-        reply_markup=ReplyKeyboardRemove(),
+To get a daily prompt to log your spending, use /remind
+"""
     )
     return ConversationHandler.END
-
-async def dont_remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data["reminders"] = False
-    await update.effective_message.reply_text(
-        "Okay! If you change your mind, use /remind",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-    return ConversationHandler.END
-
+    
 start_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
     states={
@@ -126,16 +105,6 @@ start_handler = ConversationHandler(
         USERGIVING_SPREADSHEET_URL: [
             MessageHandler(
                 filters.TEXT, give_spreadsheet_id
-            ),
-        ],
-        USER_CONFIRMING_REMINDERS: [
-            MessageHandler(
-                filters.Regex("^Yes$"),
-                remind
-            ),
-            MessageHandler(
-                filters.Regex("^No$"),
-                dont_remind
             ),
         ],
     },
