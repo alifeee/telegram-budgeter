@@ -15,13 +15,6 @@ def openSpreadsheet(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsh
     
     try:
         spreadsheet = Spreadsheet(spreadsheet_credentials, SPREADSHEET_URL)
-    except NoValidUrlKeyFound as e:
-        return None, f"""
-I can't find a spreadsheet with the link:
-<pre>{SPREADSHEET_URL}</pre>
-            
-Is the link correct? If not, change it with /start.
-"""
     except APIError as e:
         return None, f"""
 I can't access the spreadsheet with the link:

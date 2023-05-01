@@ -1,6 +1,6 @@
 from telegram import InputMediaPhoto, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, CommandHandler, filters
-
+from ..spreadsheet import verifyurl
 
 USER_CHOOSING_SHEET_MODE, USER_CONFIRMING_CREATION, USERGIVING_SPREADSHEET_URL = range(3)
 
@@ -75,6 +75,11 @@ async def use_existing_spreadsheet(update: Update, context: ContextTypes.DEFAULT
 
 async def give_spreadsheet_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     spreadsheet_id = update.effective_message.text
+    if not verifyurl(spreadsheet_id):
+        await update.effective_message.reply_text(
+            "That doesn't look like a Google Sheets URL to me. Please try again :) or /cancel"
+        )
+        return USERGIVING_SPREADSHEET_URL
     context.user_data["spreadsheet_url"] = spreadsheet_id
     await update.effective_message.reply_text("""
 Thanks! To get started, try /stats
@@ -104,7 +109,7 @@ start_handler = ConversationHandler(
         ],
         USERGIVING_SPREADSHEET_URL: [
             MessageHandler(
-                filters.TEXT, give_spreadsheet_id
+                filters.TEXT & ~filters.COMMAND, give_spreadsheet_id
             ),
         ],
     },
