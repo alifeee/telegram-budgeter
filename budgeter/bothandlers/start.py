@@ -52,7 +52,7 @@ Now, to keep track of data I need access to the spreadsheet! Please share it by:
 
 1. Clicking the "Share" button in the top right corner
 2. Entering the email address of the bot 
-    <code>telegram-budgeter@telegram-budgeter.iam.gserviceaccount.com</code>
+    telegram-budgeter@telegram-budgeter.iam.gserviceaccount.com
 3. Clicking "Share"
         """
     )
