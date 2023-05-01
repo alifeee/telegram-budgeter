@@ -16,7 +16,7 @@ from budgeter.bothandlers.errorHandler import error_handler
 from budgeter.bothandlers.remind import remind_handler
 from budgeter.bothandlers.unknown import unknown_handler
 import asyncio
-from budgeter.remind import remind
+from budgeter.remind import queue_reminder
 
 load_dotenv()
 try:
@@ -32,8 +32,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-
-
 def main():
     CREDENTIALS_PATH = "google_credentials.json"
     credentials = SpreadsheetCredentials(CREDENTIALS_PATH)
@@ -42,7 +40,7 @@ def main():
 
     # user data
     loop = asyncio.new_event_loop()
-    user_data = loop.run_until_complete(persistent_data.get_user_data())
+    all_user_data = loop.run_until_complete(persistent_data.get_user_data())
     loop.close()
 
     application = Application.builder().token(
@@ -57,20 +55,17 @@ def main():
     application.add_handler(privacy_handler)
 
     application.add_handler(unknown_handler)
+
     application.add_error_handler(error_handler)
 
-    for user, data in user_data.items():
+    for user_id, user_data in all_user_data.items():
         try:
-            sheet_url = data['spreadsheet_url']
-            reminders_on = data['reminders']
+            sheet_url = user_data['spreadsheet_url']
+            reminders_on = user_data['reminders']
         except KeyError:
             continue
         if reminders_on:
-            application.job_queue.run_repeating(
-                remind,
-                interval=3000,
-                first = 1
-            )
+            queue_reminder(application.job_queue, user_id, run_now=True)
 
     application.run_polling()
 
