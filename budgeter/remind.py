@@ -21,6 +21,9 @@ def jobname(user: int) -> str:
     return f"reminder-{user}"
 
 def queue_reminder(job_queue: JobQueue, user: int, run_now: bool = False):
+    already_a_job = job_queue.get_jobs_by_name(jobname(user))
+    if already_a_job:
+        return
     job_queue.run_daily(
         remind,
         time=datetime.time(hour=10, minute=0),
