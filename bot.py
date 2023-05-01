@@ -13,6 +13,7 @@ from budgeter.bothandlers.stats import get_stats_handler
 from budgeter.bothandlers.privacy import privacy_handler
 from budgeter.bothandlers.spreadsheet import spreadsheet_handler
 from budgeter.bothandlers.errorHandler import error_handler
+from budgeter.bothandlers.remind import remind_handler
 
 load_dotenv()
 try:
@@ -40,10 +41,11 @@ def main():
 
     application.add_handler(help_handler)
     application.add_handler(start_handler)
-    application.add_handler(privacy_handler)
     stats_handler = get_stats_handler(credentials)
     application.add_handler(stats_handler)
     application.add_handler(spreadsheet_handler)
+    application.add_handler(remind_handler)
+    application.add_handler(privacy_handler)
 
     application.add_error_handler(error_handler)
 
