@@ -24,14 +24,6 @@ Do I have access? If not, use /start for instructions on how to give me access.
 """
     return spreadsheet, None
 
-def parseData(data: list):
-    """data is a 2d array"""
-    df = pandas.DataFrame(data, columns=['Date', 'Spend'])
-    df['Date'] = pandas.to_datetime(df['Date'], format='%d/%m/%Y')
-    df['Spend'] = df['Spend'].map(lambda x: re.sub(r'[^0-9\.]', '', x))
-    df['Spend'] = pandas.to_numeric(df['Spend'])
-    return df
-
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_credentials: SpreadsheetCredentials):
     message = await update.message.reply_text("Getting stats...")
     spreadsheet, error = openSpreadsheet(update, context, spreadsheet_credentials)
@@ -40,8 +32,7 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE, spreadsheet_
         return
 
     try:
-        cols = spreadsheet.get_cols([1, 2])
-        df = parseData(cols[1:])
+        df = spreadsheet.get_parsed_data()
         average = df['Spend'].mean()
     except Exception as e:
         await message.edit_text(f"""
