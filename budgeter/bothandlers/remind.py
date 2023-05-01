@@ -1,5 +1,6 @@
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, filters
+from ..remind import queue_reminder, cancel_reminder
 
 USER_CONFIRMING_REMINDER = range(1)
 
@@ -24,6 +25,7 @@ Your reminders are currently <b>{reminders_on_text}</b>. What do you want to cha
 
 async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["reminders"] = True
+    queue_reminder(context.job_queue, update.effective_user.id)
     await update.effective_message.reply_text(
         "I'll remind you to log your spending every day at 10am. If you want to change this, use /remind",
         reply_markup=ReplyKeyboardRemove(),
@@ -32,6 +34,7 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def dont_remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["reminders"] = False
+    cancel_reminder(context.job_queue, update.effective_user.id)
     await update.effective_message.reply_text(
         "Okay! You won't be bothered. If you change your mind, use /remind",
         reply_markup=ReplyKeyboardRemove(),
