@@ -1,5 +1,7 @@
 {
-    "python.formatting.autopep8Args": [
-        "--ignore E402"
-    ]
+  "python.formatting.autopep8Args": ["--ignore E402"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none"
 }
