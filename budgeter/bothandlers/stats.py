@@ -1,11 +1,11 @@
+import datetime
+import pandas
 from ..spreadsheet import Spreadsheet
-import telegram
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-import pandas
-from gspread.exceptions import APIError, NoValidUrlKeyFound
-from gspread.client import Client
-import re
+import matplotlib.pyplot as plt
+import io
+
 
 NO_SPREADSHEET_URL_MESSAGE = """
 No spreadsheet URL found. Please create or link a spreadsheet first. /start
@@ -36,6 +36,10 @@ STATISTICS_MESSAGE = """
   {last30avg_prog}
   Median spend: £{last30median:,.2f}
   {last30med_prog}
+"""
+
+NOT_ENOUGH_DATA_FOR_ROLLING_MESSAGE = """
+When you have more than 30 days of data, I'll show you a rolling average ;).
 """
 
 
@@ -102,6 +106,55 @@ async def stats(
         ),
         parse_mode="HTML",
     )
+
+    graph_message = await update.message.reply_text("Generating graph...")
+    try:
+        figure = plt.figure()
+        ax = figure.add_subplot(111)
+        df.plot(x="Date", y="Spend", ax=ax)
+        ax.set_ylabel("Spend (£)")
+        ax.set_xlabel("Date")
+        ax.set_title("Daily Spend")
+        ax.grid()
+        ax.set_ylim(bottom=0)
+        figure.tight_layout()
+        buf = io.BytesIO()
+        figure.savefig(buf, format="png")
+        buf.seek(0)
+        await update.message.reply_photo(buf)
+        await graph_message.delete()
+    except Exception as e:
+        await graph_message.edit_text("Error generating graph: {}".format(e))
+
+    # rolling average (only if there are more than 30 days of data)
+    if len(df) < 40:
+        await update.message.reply_text(NOT_ENOUGH_DATA_FOR_ROLLING_MESSAGE)
+
+    rolling_average_message = await update.message.reply_text(
+        "Generating rolling average graph..."
+    )
+    try:
+        figure = plt.figure()
+        ax = figure.add_subplot(111)
+        rolling_spends = df["Spend"].rolling(30).mean()
+        rolling_spends_df = pandas.concat([df["Date"], rolling_spends], axis=1)
+        rolling_spends_df = rolling_spends_df.dropna()
+        rolling_spends_df.plot(x="Date", y="Spend", ax=ax)
+        ax.set_ylabel("Spend (£)")
+        ax.set_xlabel("End Date")
+        ax.set_title("30 day rolling average")
+        ax.grid()
+        ax.set_ylim(bottom=0)
+        figure.tight_layout()
+        buf = io.BytesIO()
+        figure.savefig(buf, format="png")
+        buf.seek(0)
+        await update.message.reply_photo(buf)
+        await rolling_average_message.delete()
+    except Exception as e:
+        await rolling_average_message.edit_text(
+            "Error generating rolling average graph: {}".format(e)
+        )
 
 
 stats_handler = CommandHandler("stats", stats)
