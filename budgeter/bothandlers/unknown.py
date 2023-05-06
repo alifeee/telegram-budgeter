@@ -10,4 +10,4 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(COMMAND_UNKOWN_MESSAGE)
 
 
-unknown_handler = MessageHandler(filters.COMMAND, unknown)
+unknown_command_handler = MessageHandler(filters.COMMAND, unknown)
