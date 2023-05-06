@@ -51,8 +51,8 @@ class TestSpreadsheet(unittest.TestCase):
 
     def test_verify_format_no_headers(self):
         data = [
-            ["01/01/2021", "£10.00"],
-            ["02/01/2021", "£20.00"],
+            ["01/01/2021", 10.00],
+            ["02/01/2021", 20.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -60,9 +60,9 @@ class TestSpreadsheet(unittest.TestCase):
     def test_verify_format_bad_date(self):
         data = [
             ["Date", "Spend"],
-            ["01/01/2021", "£10.00"],
-            ["not a date", "£30.00"],
-            ["04/01/2021", "£40.00"],
+            ["01/01/2021", 10.00],
+            ["not a date", 30.00],
+            ["04/01/2021", 40.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -70,10 +70,10 @@ class TestSpreadsheet(unittest.TestCase):
     def test_verify_format_missing_date(self):
         data = [
             ["Date", "Spend"],
-            ["01/01/2021", "£10.00"],
-            [None, "£20.00"],
-            ["", "£30.00"],
-            ["04/01/2021", "£40.00"],
+            ["01/01/2021", 10.00],
+            [None, 20.00],
+            ["", 30.00],
+            ["04/01/2021", 40.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -81,10 +81,10 @@ class TestSpreadsheet(unittest.TestCase):
     def test_verify_format_missing_spend(self):
         data = [
             ["Date", "Spend"],
-            ["01/01/2021", "£10.00"],
+            ["01/01/2021", 10.00],
             ["02/01/2021", None],
             ["03/01/2021", ""],
-            ["04/01/2021", "£40.00"],
+            ["04/01/2021", 40.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -92,9 +92,9 @@ class TestSpreadsheet(unittest.TestCase):
     def test_verify_format_bad_spend(self):
         data = [
             ["Date", "Spend"],
-            ["01/01/2021", "£10.00"],
+            ["01/01/2021", 10.0],
             ["03/01/2021", "not a number"],
-            ["04/01/2021", "£40.00"],
+            ["04/01/2021", 40.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -102,10 +102,10 @@ class TestSpreadsheet(unittest.TestCase):
     def test_verify_format_missing_row(self):
         data = [
             ["Date", "Spend"],
-            ["01/01/2021", "£10.00"],
+            ["01/01/2021", 10.00],
             [None, None],
             ["", ""],
-            ["04/01/2021", "£40.00"],
+            ["04/01/2021", 40.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)
@@ -115,6 +115,28 @@ class TestSpreadsheet(unittest.TestCase):
             ["Date"],
             ["01/01/2021"],
             ["02/01/2021"],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_duplicate_date(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["02/01/2021", 20.00],
+            ["02/01/2021", 30.00],
+            ["03/01/2021", 30.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_dates_not_in_order(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["03/01/2021", 20.00],
+            ["02/01/2021", 30.00],
+            ["04/01/2021", 30.00],
         ]
         valid, message = Spreadsheet.verify_format(data)
         self.assertFalse(valid, message)

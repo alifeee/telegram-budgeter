@@ -24,6 +24,18 @@ def verifyurl(url: str):
     return True
 
 
+def str_to_date(string: str):
+    """Converts a string to a date.
+
+    Args:
+        string (str): The string to convert.
+
+    Returns:
+        datetime.datetime: The date.
+    """
+    return datetime.datetime.strptime(string, "%d/%m/%Y")
+
+
 def is_date(string: str):
     """Checks if a string is a valid date.
 
@@ -33,8 +45,10 @@ def is_date(string: str):
     Returns:
         bool: True if valid, False if not.
     """
+    if string is None:
+        return False
     try:
-        _ = datetime.datetime.strptime(string, "%d/%m/%Y")
+        _ = str_to_date(string)
     except ValueError:
         return False
     return True
@@ -49,6 +63,8 @@ def is_float(string: str):
     Returns:
         bool: True if valid, False if not.
     """
+    if string is None:
+        return False
     try:
         _ = float(string)
     except ValueError:
@@ -117,6 +133,8 @@ class Spreadsheet:
 
         # check data
         blank_row = False
+        dates = []
+        dates_parsed = []
         for row in data[1:]:
             A = row[0]
             B = row[1]
@@ -136,16 +154,29 @@ class Spreadsheet:
                     False,
                     "There is a spend missing. Remove the date or add a spend.",
                 )
+            if A in dates:
+                return False, "There are duplicate dates."
+            dates.append(A)
+            # if A < last date in dates_parsed
+            if len(dates_parsed) > 0 and str_to_date(A) < dates_parsed[-1]:
+                return False, "Dates are not in ascending order."
+            dates_parsed.append(str_to_date(A))
 
         return True, None
 
     def get_spending_dataframe(self):
         """Gets the data as a pandas dataframe.
-        Columns: "Date", "Spend"
-        The first column is converted to a datetime object,
-            the second column is stripped to a float.
+
+        Raises:
+            ValueError: If the spreadsheet is not formatted correctly.
+
+        Returns:
+            pandas.DataFrame: The data as a dataframe. Columns: {"Date": datetime, "Spend": float}
         """
         data = self.get_sheet1()
+        valid, message = Spreadsheet.verify_format(data)
+        if not valid:
+            raise ValueError(message)
         first_two_columns = [row[:2] for row in data]
         dframe = pandas.DataFrame(first_two_columns[1:], columns=["Date", "Spend"])
         dframe["Date"] = pandas.to_datetime(dframe["Date"], format="%d/%m/%Y")
