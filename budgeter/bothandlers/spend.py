@@ -115,7 +115,11 @@ async def give_data(
         await message.edit_text(DATA_NOT_ADDED_MESSAGE.format(why_not))
         return ConversationHandler.END
 
-    df = spreadsheet.get_spending_dataframe()
+    try:
+        df = spreadsheet.get_spending_dataframe()
+    except Exception as e:
+        await message.edit_text(SPREADSHEET_BADLY_FORMATTED_MESSAGE)
+        return ConversationHandler.END
 
     next_date = df["Date"].max() + datetime.timedelta(days=1)
     today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
