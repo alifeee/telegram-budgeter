@@ -7,6 +7,7 @@ from telegram.ext import (
     filters,
 )
 from ..remind import queue_reminder, cancel_reminder
+from .cancel import cancel_handler
 
 ASK_REMINDER_MESSAGE = """
 This bot can remind you at 11am every day to log the previous day's spending. It also prompts you to fill in any missed days.
@@ -72,7 +73,5 @@ remind_handler = ConversationHandler(
             MessageHandler(filters.Regex(f"^({DONT_REMIND_CHOICE})$"), dont_remind),
         ],
     },
-    fallbacks=[
-        CommandHandler("cancel", lambda *args: ConversationHandler.END),
-    ],
+    fallbacks=[cancel_handler],
 )
