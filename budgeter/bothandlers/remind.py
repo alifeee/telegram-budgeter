@@ -12,7 +12,7 @@ from .cancel import cancel_handler
 ASK_REMINDER_MESSAGE = """
 This bot can remind you at 11am every day to log the previous day's spending. It also prompts you to fill in any missed days.
 
-Your reminders are currently %s. What do you want to change?
+Your reminders are currently {}. What do you want to change?
 """
 DO_REMIND_CHOICE = "Remind me"
 DONT_REMIND_CHOICE = "Don't remind me"
@@ -35,7 +35,7 @@ async def ask_remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         reminders_on = False
     reminders_on_text = "on" if reminders_on else "off"
     await update.effective_message.reply_html(
-        ASK_REMINDER_MESSAGE % reminders_on_text,
+        ASK_REMINDER_MESSAGE.format(reminders_on_text),
         reply_markup=ReplyKeyboardMarkup(
             [[DO_REMIND_CHOICE], [DONT_REMIND_CHOICE]],
             is_persistent=True,

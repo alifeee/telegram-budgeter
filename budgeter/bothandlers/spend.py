@@ -23,7 +23,7 @@ You're up to date. Try /stats to see insights
 """
 
 SPENDING_DATA_MISSING_MESSAGE = """
-Spending data missing for %s. How much did you spend on this day? (%s)
+Spending data missing for {}}. How much did you spend on this day? ({}})
 """
 
 NOT_A_NUMBER_MESSAGE = """
@@ -31,15 +31,16 @@ That doesn't look like a number. Try again?
 """
 
 RECORDED_FINAL_SPEND_MESSAGE = """
-Recorded £%s! You're up to date.
+Recorded £{:.2f}! You're up to date.
 
-Average spend over the last 30 days: £ %s
+Average spend over the last 30 days: 
+£{:.2f} ({} £{:.2f})
 
 Use /stats for more
 """
 
 RECORDED_INTERMEDIATE_SPEND_MESSAGE = """
-Recorded £%s! Spending data missing for %s. How much did you spend on this day? (%s)
+Recorded £{:.2f}! Spending data missing for {}}. How much did you spend on this day? ({})
 """
 
 
@@ -107,7 +108,7 @@ async def spend(
         daysagotext = f"{daysago} days ago"
 
     await message.edit_text(
-        SPENDING_DATA_MISSING_MESSAGE % (f"{dayofweek} {date}", daysagotext)
+        SPENDING_DATA_MISSING_MESSAGE.format(f"{dayofweek} {date}", daysagotext)
     )
     return USER_GIVING_DATA
 
@@ -134,8 +135,7 @@ async def give_data(
         avgdiff = get_avg_diff(df)
         avgarrow = "⬆️" if avgdiff > 0 else "⬇️" if avgdiff < 0 else "➡️"
         await message.edit_text(
-            RECORDED_FINAL_SPEND_MESSAGE
-            % (amount, f"{avg30d:.2f} ({avgarrow} £{abs(avgdiff):.2f})")
+            RECORDED_FINAL_SPEND_MESSAGE.format(amount, avg30d, avgarrow, abs(avgdiff))
         )
         return ConversationHandler.END
     elif first_no_data < datetime.datetime.now():
@@ -149,8 +149,9 @@ async def give_data(
             daysagotext = f"{daysago} days ago"
 
         await message.edit_text(
-            RECORDED_INTERMEDIATE_SPEND_MESSAGE
-            % (amount, f"{dayofweek} {date}", daysagotext)
+            RECORDED_INTERMEDIATE_SPEND_MESSAGE.format(
+                amount, f"{dayofweek} {date}", daysagotext
+            )
         )
         return USER_GIVING_DATA
 

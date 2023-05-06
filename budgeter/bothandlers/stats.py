@@ -11,17 +11,17 @@ No spreadsheet URL found. Please create or link a spreadsheet first. /start
 """
 NO_SPREADSHEET_ACCESS_MESSAGE = """
 I can't access the spreadsheet with the link:
-%s
+{}
 
 Do I have access? If not, use /start for instructions on how to give me access.
 """
 ERROR_PROCESSING_SPREADSHEET_MESSAGE = """
 Error processing spreadsheet. Ask @alifeeerenn why. :)
 
-(Error: %s)
+(Error: {})
 """
 STATISTICS_MESSAGE = """
-Average spend: £%s
+Average spend: £{:.2f}
 """
 
 
@@ -40,7 +40,7 @@ def openSpreadsheet(
     except APIError as e:
         return (
             None,
-            NO_SPREADSHEET_ACCESS_MESSAGE % SPREADSHEET_URL,
+            NO_SPREADSHEET_ACCESS_MESSAGE.format(SPREADSHEET_URL),
         )
 
     return spreadsheet, None
@@ -61,10 +61,10 @@ async def stats(
         df = spreadsheet.get_parsed_data()
         average = df["Spend"].mean()
     except Exception as e:
-        await message.edit_text(ERROR_PROCESSING_SPREADSHEET_MESSAGE % str(e))
+        await message.edit_text(ERROR_PROCESSING_SPREADSHEET_MESSAGE.format(e))
         raise e
 
-    await message.edit_text(STATISTICS_MESSAGE % average)
+    await message.edit_text(STATISTICS_MESSAGE.format(average))
 
 
 def get_stats_handler(credentials: SpreadsheetCredentials):

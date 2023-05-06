@@ -9,7 +9,7 @@ It doesn't look like you've linked a spreadsheet! Try /start
 SPREADSHEET_LINKED_MESSAGE = """
 Your spreadsheet is:
 
-%s
+{}
 """
 
 
@@ -22,7 +22,7 @@ async def get_spreadsheet_url(
         await update.effective_message.reply_text(NO_LINKED_SPREADSHEET_MESSAGE)
         return
 
-    await update.message.reply_text(SPREADSHEET_LINKED_MESSAGE % spreadsheet_url)
+    await update.message.reply_text(SPREADSHEET_LINKED_MESSAGE.format(spreadsheet_url))
 
 
 spreadsheet_handler = CommandHandler("spreadsheet", get_spreadsheet_url)
