@@ -62,7 +62,9 @@ Credentials are stored in `google_credentials.json`. Follow the [gspread "Servic
 
 [gspread-guide]: https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
 
-## Telegram Credentials
+## Telegram
+
+### Credentials
 
 To obtain an access token for telegram, see [help page](https://github.com/python-telegram-bot/python-telegram-bot/wiki/Introduction-to-the-API), but in essence, talk to the [BotFather](https://t.me/botfather).
 
@@ -77,6 +79,23 @@ touch .env
 ```.env
 TELEGRAM_BOT_ACCESS_TOKEN=...
 ADMIN_USER_ID=...
+```
+
+### Change commands
+
+To change the commands, talk to the [BotFather](https://t.me/botfather) and use the `/setcommands` command.
+
+```text
+/setcommands
+...
+stats - Get spending statistics
+spreadsheet - Get spreadsheet URL
+spend - Set a day's spend
+remind - Set reminders on/off
+start - Set spreadsheet/restart
+help - See help
+privacy - See privacy information
+cancel - cancel the current operation
 ```
 
 ## Persistent data

@@ -52,19 +52,6 @@ def main():
 
     async def add_client_to_application(application: Application) -> None:
         application.bot_data["spreadsheet_client"] = spreadsheet_client
-        bot: Bot = application.bot
-        await bot.set_my_commands(
-            [
-                ("stats", "Get spending statistics"),
-                ("spreadsheet", "Get spreadsheet URL"),
-                ("spend", "Set a day's spend"),
-                ("remind", "Set reminders on/off"),
-                ("start", "Set spreadsheet"),
-                ("help", "See help"),
-                ("privacy", "See privacy information"),
-                ("cancel", "Cancel the current operation"),
-            ]
-        )
 
     # application
     application = (
