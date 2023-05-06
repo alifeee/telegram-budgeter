@@ -35,7 +35,13 @@ logger = logging.getLogger(__name__)
 
 def main():
     # user data
-    persistent_data = PicklePersistence(filepath="bot_data.pickle")
+    persistent_data = PicklePersistence(
+        filepath="bot_data.pickle",
+        store_data=PersistenceInput(
+            user_data=True,
+            bot_data=False,
+        ),
+    )
     loop = asyncio.new_event_loop()
     all_user_data = loop.run_until_complete(persistent_data.get_user_data())
     loop.close()
