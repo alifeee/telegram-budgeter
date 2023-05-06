@@ -6,7 +6,7 @@ from telegram.ext import (
     CommandHandler,
     filters,
 )
-from ..spreadsheet import verifyurl
+from ..spreadsheet import verifyurl, Spreadsheet
 from .cancel import cancel_handler
 
 USER_CHOOSING_SHEET_MODE, USER_CONFIRMING_CREATION, USERGIVING_SPREADSHEET_URL = range(
@@ -57,6 +57,22 @@ Please send me the URL of the spreadsheet you want to use. Make sure it is share
 """
 NOT_A_SPREADSHEET_URL_MESSAGE = """
 That doesn't look like a Google Sheets URL to me. Please try again :) or /cancel
+"""
+COULD_NOT_ACCESS_SPREADSHEET_MESSAGE = """
+I can't access the spreadsheet with the link:
+
+{}
+
+Check your permissions. To see instructions on how to give me access, use /start again
+
+If you've changed it, give me the new link:
+"""
+SPREADSHEET_NOT_VALID_MESSAGE = """
+I have a problem with your spreadsheet:
+
+{}
+
+Please fix it and send me the link again, or /cancel
 """
 SPREADSHEET_URL_ACCEPTED_MESSAGE = """
 Thanks! To get started, try /stats
@@ -120,6 +136,24 @@ async def give_spreadsheet_id(
     if not verifyurl(spreadsheet_id):
         await update.effective_message.reply_text(NOT_A_SPREADSHEET_URL_MESSAGE)
         return USERGIVING_SPREADSHEET_URL
+
+    spreadsheet_client = context.bot_data["spreadsheet_client"]
+    spreadsheet = Spreadsheet(spreadsheet_client, spreadsheet_id)
+    try:
+        sheet = spreadsheet.get_sheet1()
+    except Exception as e:
+        await update.effective_message.reply_text(
+            COULD_NOT_ACCESS_SPREADSHEET_MESSAGE.format(spreadsheet_id)
+        )
+        return USERGIVING_SPREADSHEET_URL
+
+    valid, message = Spreadsheet.verify_format(sheet)
+    if not valid:
+        await update.effective_message.reply_text(
+            SPREADSHEET_NOT_VALID_MESSAGE.format(message)
+        )
+        return USERGIVING_SPREADSHEET_URL
+
     context.user_data["spreadsheet_url"] = spreadsheet_id
     await update.effective_message.reply_text(SPREADSHEET_URL_ACCEPTED_MESSAGE)
     return ConversationHandler.END
