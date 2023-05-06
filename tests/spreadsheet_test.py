@@ -6,72 +6,146 @@ import sys
 import pandas
 import numpy
 import datetime
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from budgeter.spreadsheet import SpreadsheetCredentials, Spreadsheet
+from gspread.client import Client
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from budgeter.spreadsheet import Spreadsheet
 
 
 class TestSpreadsheet(unittest.TestCase):
-    @patch('gspread.service_account')
-    def test_get_cols(self, mock_gspread_service_account):
-        mock_gspread_service_account.return_value = MagicMock()
+    @patch("gspread.Client")
+    def test_get_sheet1(self, mock_client):
         # arrange
         expected = [
-            ['Date', 'Spend', "Category"],
-            ['01/01/2021', '£10.00', 'Food'],
-            ['02/01/2021', '£20.00', 'Travel']
+            ["Date", "Spend", "Category"],
+            ["01/01/2021", "£10.00", "Food"],
+            ["02/01/2021", "£20.00", "Travel"],
         ]
-        credentials = SpreadsheetCredentials("credentials_path")
-        spreadsheet = Spreadsheet(credentials, "spreadsheet_id")
-        # spreadsheet.spreadsheet.sheet1.col_values(i) returns a different column for each i
-        columns = [
-            ['Date', '01/01/2021', '02/01/2021'],
-            ['Spend', '£10.00', '£20.00'],
-            ['Category', 'Food', 'Travel']
-        ]
-        spreadsheet.spreadsheet.sheet1.col_values = MagicMock(
-            side_effect=lambda i: columns[i - 1]
-        )
+        mock_worksheet = MagicMock()
+        mock_worksheet.get_values = MagicMock(return_value=expected)
+        mock_spreadsheet = MagicMock()
+        mock_spreadsheet.sheet1 = mock_worksheet
+        mock_client.open_by_url = MagicMock(return_value=mock_spreadsheet)
 
         # act
-        actual = spreadsheet.get_cols([1, 2, 3])
+        spreadsheet = Spreadsheet(
+            mock_client,
+            "bogus url",
+        )
+        actual = spreadsheet.get_sheet1()
 
         # assert
         self.assertEqual(expected, actual)
 
-    @patch('gspread.service_account')
-    def test_get_parsed_data(self, mock_gspread_service_account):
-        mock_gspread_service_account.return_value = MagicMock()
-        # arrange
-        expected = pandas.DataFrame({
-            "Date": [
-                datetime.datetime(2021, 1, 1),
-                datetime.datetime(2021, 1, 2),
-                datetime.datetime(2021, 1, 3)
-            ],
-            "Spend": [20, 10.50, math.nan],
-        })
-        credentials = SpreadsheetCredentials("credentials_path")
-        spreadsheet = Spreadsheet(credentials, "spreadsheet_id")
-        columns = [
-            ['Date', '01/01/2021', '02/01/2021', '03/01/2021'],
-            ['Spend', '£20.00', '£10.50', 'garbage'],
-            ['Category', 'Food', 'Travel', 'garbage']
+    def test_verify_format_no_data(self):
+        data = []
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertTrue(valid, message)
+
+    def test_verify_format_only_headers(self):
+        data = [
+            ["Date", "Spend"],
         ]
-        spreadsheet.spreadsheet.sheet1.col_values = MagicMock(
-            side_effect=lambda i: columns[i - 1]
-        )
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertTrue(valid, message)
 
-        # act
-        actual = spreadsheet.get_parsed_data()
+    def test_verify_format_no_headers(self):
+        data = [
+            ["01/01/2021", 10.00],
+            ["02/01/2021", 20.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
 
-        # assert
-        self.assertEqual(expected["Date"].dtype, actual["Date"].dtype)
-        self.assertEqual(expected["Spend"].dtype, actual["Spend"].dtype)
-        self.assertEqual(expected["Date"].tolist(), actual["Date"].tolist())
-        # nans do not compare equal, so...
-        self.assertTrue(
-            numpy.array_equal(
-                expected["Spend"].fillna(0).tolist(),
-                actual["Spend"].fillna(0).tolist()
-            )
-        )
+    def test_verify_format_bad_date(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["not a date", 30.00],
+            ["04/01/2021", 40.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_missing_date(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            [None, 20.00],
+            ["", 30.00],
+            ["04/01/2021", 40.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_missing_spend(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["02/01/2021", None],
+            ["03/01/2021", ""],
+            ["04/01/2021", 40.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_bad_spend(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.0],
+            ["03/01/2021", "not a number"],
+            ["04/01/2021", 40.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_missing_row(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            [None, None],
+            ["", ""],
+            ["04/01/2021", 40.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_not_enough_columns(self):
+        data = [
+            ["Date"],
+            ["01/01/2021"],
+            ["02/01/2021"],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_duplicate_date(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["02/01/2021", 20.00],
+            ["02/01/2021", 30.00],
+            ["03/01/2021", 30.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_dates_not_in_order(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["03/01/2021", 20.00],
+            ["02/01/2021", 30.00],
+            ["04/01/2021", 30.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertFalse(valid, message)
+
+    def test_verify_format_valid(self):
+        data = [
+            ["Date", "Spend"],
+            ["01/01/2021", 10.00],
+            ["02/01/2021", 20.00],
+        ]
+        valid, message = Spreadsheet.verify_format(data)
+        self.assertTrue(valid, message)
