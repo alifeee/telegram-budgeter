@@ -4,7 +4,7 @@ This file is used to connect to the Google Sheets API.
 import re
 import datetime
 import gspread
-from gspread.utils import ValueRenderOption, DateTimeOption
+from gspread.utils import ValueRenderOption, DateTimeOption, ValueInputOption
 import pandas
 
 
@@ -138,22 +138,22 @@ class Spreadsheet:
         for row in data[1:]:
             A = row[0]
             B = row[1]
-            if A is None and B is None:
+            if A == "" and B == "":
                 blank_row = True
                 continue
             if blank_row:
                 return False, "There is a blank row in the middle of the data."
-            if not is_date(A):
-                return False, "A2 onwards must be dates."
-            if not is_float(B):
-                return False, "B2 onwards must be floats."
-            if A is None and B is not None:
+            if A == "" and B != "":
                 return False, "There is a date missing. Remove the spend or add a date."
-            if B is None and A is not None:
+            if A != "" and B == "":
                 return (
                     False,
                     "There is a spend missing. Remove the date or add a spend.",
                 )
+            if not is_date(A):
+                return False, "A2 onwards must be dates."
+            if not is_float(B):
+                return False, "B2 onwards must be floats."
             if A in dates:
                 return False, "There are duplicate dates."
             dates.append(A)
@@ -183,7 +183,7 @@ class Spreadsheet:
         dframe["Spend"] = pandas.to_numeric(dframe["Spend"])
         return dframe
 
-    def add_data(self, date: datetime.datetime, spend: float):
+    def add_data(self, date_dt: datetime.datetime, spend: float):
         """Adds a row to the spreadsheet.
 
         Args:
@@ -191,14 +191,30 @@ class Spreadsheet:
             spend (float): The spend to add.
 
         Returns:
-            Dataframe: The dataframe with the new row added.
+            bool: True if successful, False if not.
+            message: A "why" message if unsuccessful.
         """
-        date_str = date.strftime("%d/%m/%Y")
-        self.spreadsheet.sheet1.append_row(
-            [date_str, spend],
-            value_input_option=gspread.worksheet.ValueInputOption.user_entered,
-        )
-        return self.get_parsed_data()
+        date_str = date_dt.strftime("%d/%m/%Y")
+        current_data = self.get_spending_dataframe()
+        if date_dt in current_data["Date"].values:
+            return False, "Attempting to add a duplicate date to spreadsheet."
+        if date_dt < current_data["Date"].max():
+            return (
+                False,
+                "Attempting to add a date before most recent data to spreadsheet.",
+            )
+        new_row = [date_str, spend]
+        spreadsheet = self.spreadsheet_client.open_by_url(self.spreadsheet_url)
+        # index is length of dataframe + 1
+        try:
+            spreadsheet.sheet1.insert_row(
+                new_row,
+                index=len(current_data) + 2,
+                value_input_option=ValueInputOption.user_entered,
+            )
+        except Exception as e:
+            return False, f"Error adding data to spreadsheet: {e}"
+        return True, None
 
 
 def main():
@@ -209,7 +225,11 @@ def main():
     spreadsheet = Spreadsheet(credentials, SPREADSHEET_ID)
 
     # data
-    df = spreadsheet.get_spending_dataframe()
+    try:
+        df = spreadsheet.get_spending_dataframe()
+    except ValueError as e:
+        print(e)
+        return
     print(df)
 
 
