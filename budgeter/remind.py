@@ -55,12 +55,6 @@ def queue_reminder(job_queue: JobQueue, user: int, run_now: bool = False):
         chat_id=user,
         name=jobname(user),
     )
-    if run_now:
-        job_queue.run_once(
-            remind,
-            when=0,
-            chat_id=user,
-        )
     return "success"
 
 

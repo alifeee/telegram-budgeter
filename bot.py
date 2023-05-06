@@ -71,7 +71,6 @@ def main():
     application.add_handler(privacy_handler)
 
     application.add_handler(unknown_command_handler)
-
     application.add_error_handler(error_handler)
 
     for user_id, user_data in all_user_data.items():
@@ -81,9 +80,7 @@ def main():
         except KeyError:
             continue
         if reminders_on:
-            queue_reminder(application.job_queue, user_id, run_now=True)
-
-    application.post_init(add_client_to_application)
+            queue_reminder(application.job_queue, user_id)
 
     application.run_polling()
 
