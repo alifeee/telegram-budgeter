@@ -23,22 +23,19 @@ def verifyurl(url: str):
     return True
 
 
-class SpreadsheetCredentials:
-    """
-    A class to store the credentials for the Google Sheets API.
-    """
-
-    def __init__(self, credentials_path: str):
-        self.gspread_credentials = gspread.service_account(filename=credentials_path)
-
-
 class Spreadsheet:
     """
     A class to connect to the Google Sheets API and view/edit spreadsheets.
     """
 
-    def __init__(self, credentials: SpreadsheetCredentials, spreadsheet_url: str):
-        self.spreadsheet = credentials.gspread_credentials.open_by_url(spreadsheet_url)
+    def __init__(self, spreadsheet_client: gspread.client.Client, spreadsheet_url: str):
+        """Creates a Spreadsheet object.
+
+        Args:
+            credentials (gspread.client.Client): A spreadsheet client created by gspread.service_account().
+            spreadsheet_url (str): The url of the spreadsheet to connect to.
+        """
+        self.spreadsheet = spreadsheet_client.open_by_url(spreadsheet_url)
 
     def get_cols(self, column_numbers: list, ignore_first_row=False):
         """Gets the specified columns as a 2d array.

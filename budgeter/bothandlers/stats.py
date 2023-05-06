@@ -1,9 +1,10 @@
-from ..spreadsheet import SpreadsheetCredentials, Spreadsheet
+from ..spreadsheet import Spreadsheet
 import telegram
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 import pandas
 from gspread.exceptions import APIError, NoValidUrlKeyFound
+from gspread.client import Client
 import re
 
 NO_SPREADSHEET_URL_MESSAGE = """
@@ -28,7 +29,6 @@ Average spend: £{:.2f}
 def openSpreadsheet(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    spreadsheet_credentials: SpreadsheetCredentials,
 ):
     try:
         SPREADSHEET_URL = context.user_data["spreadsheet_url"]
@@ -36,7 +36,8 @@ def openSpreadsheet(
         return None, NO_SPREADSHEET_URL_MESSAGE
 
     try:
-        spreadsheet = Spreadsheet(spreadsheet_credentials, SPREADSHEET_URL)
+        spreadsheet_client = context.bot_data["spreadsheet_client"]
+        spreadsheet = Spreadsheet(spreadsheet_client, SPREADSHEET_URL)
     except APIError as e:
         return (
             None,
@@ -49,10 +50,10 @@ def openSpreadsheet(
 async def stats(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    spreadsheet_credentials: SpreadsheetCredentials,
 ):
     message = await update.message.reply_text("Getting stats...")
-    spreadsheet, error = openSpreadsheet(update, context, spreadsheet_credentials)
+    spreadsheet_client = context.bot_data["spreadsheet_client"]
+    spreadsheet, error = openSpreadsheet(update, context)
     if error:
         await message.edit_text(error, parse_mode="HTML")
         return
@@ -67,7 +68,4 @@ async def stats(
     await message.edit_text(STATISTICS_MESSAGE.format(average))
 
 
-def get_stats_handler(credentials: SpreadsheetCredentials):
-    return CommandHandler(
-        "stats", lambda update, context: stats(update, context, credentials)
-    )
+stats_handler = CommandHandler("stats", stats)

@@ -6,11 +6,12 @@ from telegram.ext import (
     CommandHandler,
     filters,
 )
-from ..spreadsheet import Spreadsheet, SpreadsheetCredentials
+from ..spreadsheet import Spreadsheet
 import datetime
 import pandas
 import numpy
 from .cancel import cancel_handler
+from gspread.client import Client
 
 USER_GIVING_DATA = range(1)
 
@@ -79,7 +80,6 @@ def get_avg_diff(dataframe: pandas.DataFrame) -> float:
 async def spend(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    spreadsheet_credentials: SpreadsheetCredentials,
 ) -> None:
     message = await update.message.reply_text("Loading...")
     try:
@@ -89,7 +89,8 @@ async def spend(
         return ConversationHandler.END
 
     context.user_data["spreadsheet_url"] = spreadsheet_url
-    spreadsheet = Spreadsheet(spreadsheet_credentials, spreadsheet_url)
+    spreadsheet_client = context.bot_data["spreadsheet_client"]
+    spreadsheet = Spreadsheet(spreadsheet_client, spreadsheet_url)
     df = spreadsheet.get_parsed_data()
 
     first_no_data = get_first_day_without_data(df)
@@ -116,7 +117,6 @@ async def spend(
 async def give_data(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    spreadsheet_credentials: SpreadsheetCredentials,
 ) -> None:
     message = await update.message.reply_text("Loading...")
     try:
@@ -126,7 +126,8 @@ async def give_data(
         return USER_GIVING_DATA
 
     spreadsheet_url = context.user_data["spreadsheet_url"]
-    spreadsheet = Spreadsheet(spreadsheet_credentials, spreadsheet_url)
+    spreadsheet_client = context.bot_data["spreadsheet_client"]
+    spreadsheet = Spreadsheet(spreadsheet_client, spreadsheet_url)
     df = spreadsheet.add_data(context.user_data["date"], amount)
     first_no_data = get_first_day_without_data(df)
     today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -156,15 +157,10 @@ async def give_data(
         return USER_GIVING_DATA
 
 
-def get_spend_handler(credentials: SpreadsheetCredentials):
-    spend_credded = lambda u, c: spend(u, c, credentials)
-    give_data_credded = lambda u, c: give_data(u, c, credentials)
-    return ConversationHandler(
-        entry_points=[CommandHandler("spend", spend_credded)],
-        states={
-            USER_GIVING_DATA: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, give_data_credded)
-            ]
-        },
-        fallbacks=[cancel_handler],
-    )
+spend_handler = ConversationHandler(
+    entry_points=[CommandHandler("spend", spend)],
+    states={
+        USER_GIVING_DATA: [MessageHandler(filters.TEXT & ~filters.COMMAND, give_data)]
+    },
+    fallbacks=[cancel_handler],
+)
