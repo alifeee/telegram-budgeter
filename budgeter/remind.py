@@ -51,7 +51,7 @@ def queue_reminder(job_queue: JobQueue, user: int, run_now: bool = False):
         return "already_in_queue"
     job_queue.run_daily(
         remind,
-        time=datetime.time(hour=10, minute=0),
+        time=datetime.time(hour=9, minute=0),
         chat_id=user,
         name=jobname(user),
     )

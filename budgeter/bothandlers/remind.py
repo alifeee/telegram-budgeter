@@ -10,7 +10,7 @@ from ..remind import queue_reminder, cancel_reminder
 from .cancel import cancel_handler
 
 ASK_REMINDER_MESSAGE = """
-This bot can remind you at 11am every day to log the previous day's spending. It also prompts you to fill in any missed days.
+This bot can remind you at 10am every day to log the previous day's spending. It also prompts you to fill in any missed days.
 
 Your reminders are currently {}. What do you want to change?
 """
