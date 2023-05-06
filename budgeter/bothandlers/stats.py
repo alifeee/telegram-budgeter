@@ -111,16 +111,48 @@ async def stats(
     try:
         figure = plt.figure()
         ax = figure.add_subplot(111)
-        df.plot(x="Date", y="Spend", ax=ax)
+
+        df.plot(
+            x="Date",
+            y="Spend",
+            ax=ax,
+        )
+
+        last_date = df["Date"].max()
+        days_ago_30 = last_date - datetime.timedelta(days=30)
+        ax.vlines(
+            days_ago_30,
+            0,
+            df["Spend"].max(),
+            color="red",
+            linestyle=":",
+            alpha=0.5,
+            label="30d ago",
+        )
+
+        rolling_spends_7d = df["Spend"].rolling(7).mean()
+        rolling_spends_7d_df = pandas.concat([df["Date"], rolling_spends_7d], axis=1)
+        rolling_spends_7d_df.columns = ["Date", "7d rolling average"]
+        rolling_spends_7d_df = rolling_spends_7d_df.dropna()
+        rolling_spends_7d_df.plot(
+            x="Date",
+            y="7d rolling average",
+            ax=ax,
+            linestyle="dashed",
+        )
+
+        ax.legend()
         ax.set_ylabel("Spend (£)")
         ax.set_xlabel("Date")
         ax.set_title("Daily Spend")
         ax.grid()
         ax.set_ylim(bottom=0)
         figure.tight_layout()
+
         buf = io.BytesIO()
         figure.savefig(buf, format="png")
         buf.seek(0)
+
         await update.message.reply_photo(buf)
         await graph_message.delete()
     except Exception as e:
@@ -136,19 +168,28 @@ async def stats(
     try:
         figure = plt.figure()
         ax = figure.add_subplot(111)
-        rolling_spends = df["Spend"].rolling(30).mean()
-        rolling_spends_df = pandas.concat([df["Date"], rolling_spends], axis=1)
-        rolling_spends_df = rolling_spends_df.dropna()
-        rolling_spends_df.plot(x="Date", y="Spend", ax=ax)
+
+        rolling_spends_30d = df["Spend"].rolling(30).mean()
+        rolling_spends_30d_df = pandas.concat([df["Date"], rolling_spends_30d], axis=1)
+        rolling_spends_30d_df.columns = ["Date", "30d rolling average"]
+        rolling_spends_30d_df = rolling_spends_30d_df.dropna()
+        rolling_spends_30d_df.plot(
+            x="Date",
+            y="30d rolling average",
+            ax=ax,
+        )
+
         ax.set_ylabel("Spend (£)")
         ax.set_xlabel("End Date")
         ax.set_title("30 day rolling average")
         ax.grid()
         ax.set_ylim(bottom=0)
         figure.tight_layout()
+
         buf = io.BytesIO()
         figure.savefig(buf, format="png")
         buf.seek(0)
+
         await update.message.reply_photo(buf)
         await rolling_average_message.delete()
     except Exception as e:
