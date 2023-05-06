@@ -60,23 +60,6 @@ def get_first_day_without_data(dataframe: pandas.DataFrame) -> datetime:
         return dataframe["Date"].max() + datetime.timedelta(days=1)
 
 
-def get_30d_avg(dataframe: pandas.DataFrame) -> float:
-    """
-    Given a dataframe with "Date" and "Spend" columns, returns the average spend over the last 30 days.
-    """
-    last_30_days = dataframe.tail(30)
-    return last_30_days["Spend"].mean()
-
-
-def get_avg_diff(dataframe: pandas.DataFrame) -> float:
-    """
-    Given a dataframe with "Date" and "Spend" columns, returns the difference between the average spend over the last 30 days the average spend from N-1 to N-31 days.
-    """
-    old_30_days = dataframe.tail(31).head(30)
-    last_30_days = dataframe.tail(30)
-    return last_30_days["Spend"].mean() - old_30_days["Spend"].mean()
-
-
 async def spend(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -132,8 +115,8 @@ async def give_data(
     first_no_data = get_first_day_without_data(df)
     today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     if first_no_data >= today:
-        avg30d = get_30d_avg(df)
-        avgdiff = get_avg_diff(df)
+        avg30d = df["Spend"].tail(30).mean()
+        avgdiff = df["Spend"].tail(31).head(30).mean() - avg30d
         avgarrow = "⬆️" if avgdiff > 0 else "⬇️" if avgdiff < 0 else "➡️"
         await message.edit_text(
             RECORDED_FINAL_SPEND_MESSAGE.format(amount, avg30d, avgarrow, abs(avgdiff))
