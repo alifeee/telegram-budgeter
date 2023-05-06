@@ -142,24 +142,33 @@ class Spreadsheet:
                 blank_row = True
                 continue
             if blank_row:
-                return False, "There is a blank row in the middle of the data."
+                return False, "There is a blank row in the middle of columns A and B."
             if A == "" and B != "":
-                return False, "There is a date missing. Remove the spend or add a date."
+                return (
+                    False,
+                    "One of the dates in column A is missing. Remove the spend or add a date here.",
+                )
             if A != "" and B == "":
                 return (
                     False,
-                    "There is a spend missing. Remove the date or add a spend.",
+                    "One of the spends in column B is missing. Remove the date or add a spend here.",
                 )
             if not is_date(A):
-                return False, "A2 onwards must be dates."
+                return (
+                    False,
+                    "The cells in column A do not look like dates. Make sure they are.",
+                )
             if not is_float(B):
-                return False, "B2 onwards must be floats."
+                return (
+                    False,
+                    "The cells in column B do not look like floats. Make sure they are.",
+                )
             if A in dates:
-                return False, "There are duplicate dates."
+                return False, "There are duplicate dates in column A."
             dates.append(A)
             # if A < last date in dates_parsed
             if len(dates_parsed) > 0 and str_to_date(A) < dates_parsed[-1]:
-                return False, "Dates are not in ascending order."
+                return False, "The dates in column A are not in ascending order."
             dates_parsed.append(str_to_date(A))
 
         return True, None
