@@ -4,6 +4,7 @@ This file is used to connect to the Google Sheets API.
 import re
 import datetime
 import gspread
+from gspread.utils import ValueRenderOption, DateTimeOption
 import pandas
 
 
@@ -23,6 +24,38 @@ def verifyurl(url: str):
     return True
 
 
+def is_date(string: str):
+    """Checks if a string is a valid date.
+
+    Args:
+        string (str): The string to check.
+
+    Returns:
+        bool: True if valid, False if not.
+    """
+    try:
+        _ = datetime.datetime.strptime(string, "%d/%m/%Y")
+    except ValueError:
+        return False
+    return True
+
+
+def is_float(string: str):
+    """Checks if a string is a valid float.
+
+    Args:
+        string (str): The string to check.
+
+    Returns:
+        bool: True if valid, False if not.
+    """
+    try:
+        _ = float(string)
+    except ValueError:
+        return False
+    return True
+
+
 class Spreadsheet:
     """
     A class to connect to the Google Sheets API and view/edit spreadsheets.
@@ -35,33 +68,87 @@ class Spreadsheet:
             credentials (gspread.client.Client): A spreadsheet client created by gspread.service_account().
             spreadsheet_url (str): The url of the spreadsheet to connect to.
         """
-        self.spreadsheet = spreadsheet_client.open_by_url(spreadsheet_url)
+        self.spreadsheet_client = spreadsheet_client
+        self.spreadsheet_url = spreadsheet_url
 
-    def get_cols(self, column_numbers: list, ignore_first_row=False):
-        """Gets the specified columns as a 2d array.
-
-        Args:
-            column_numbers (list of ints): The column numbers to get. Starts at 1.
+    def get_sheet1(self):
+        """Gets the first sheet of the spreadsheet.
 
         Returns:
-            list of lists: The columns as a 2d array.
+            list[list]: The sheet as a 2d array. [row][column]
         """
-        columns = [self.spreadsheet.sheet1.col_values(col) for col in column_numbers]
-        columns_2d = [list(x) for x in zip(*columns)]
+        spreadsheet = self.spreadsheet_client.open_by_url(self.spreadsheet_url)
+        return spreadsheet.sheet1.get_values(
+            value_render_option=ValueRenderOption.unformatted,
+            date_time_render_option=DateTimeOption.formated_string,
+        )
 
-        if ignore_first_row:
-            return columns_2d[1:]
-        return columns_2d
+    def verify_format(data: list[list]):
+        """Verifies that the spreadsheet is formatted correctly, i.e.,
+        - A1 and B1 are strings (column headers)
+        - A2 onwards are dates
+        - B2 onwards are floats
+        - If An is empty, Bn is empty
+        - If Bn is empty, An is empty
 
-    def get_parsed_data(self):
+        Args:
+            data (list[list]): The spreadsheet data, as a 2d array. [row][column]
+
+        Returns:
+            bool: True if the spreadsheet is formatted correctly, False if not.
+            message: A message explaining why the spreadsheet is not formatted correctly.
+        """
+        # check empty
+        if len(data) == 0:
+            return True, None
+        # check columns
+        if len(data[0]) == 1:
+            return False, "There is only one column. There should be two or zero."
+
+        # check headers
+        A1 = data[0][0]
+        B1 = data[0][1]
+        if not (isinstance(A1, str) and isinstance(B1, str)):
+            return False, "A1 and B1 should be headers (strings)"
+        if is_date(A1):
+            return False, "A1 is a date. It should be a header (string)"
+        if is_float(B1):
+            return False, "B1 is a float. It should be a header (string)"
+
+        # check data
+        blank_row = False
+        for row in data[1:]:
+            A = row[0]
+            B = row[1]
+            if A is None and B is None:
+                blank_row = True
+                continue
+            if blank_row:
+                return False, "There is a blank row in the middle of the data."
+            if not is_date(A):
+                return False, "A2 onwards must be dates."
+            if not is_float(B):
+                return False, "B2 onwards must be floats."
+            if A is None and B is not None:
+                return False, "There is a date missing. Remove the spend or add a date."
+            if B is None and A is not None:
+                return (
+                    False,
+                    "There is a spend missing. Remove the date or add a spend.",
+                )
+
+        return True, None
+
+    def get_spending_dataframe(self):
         """Gets the data as a pandas dataframe.
+        Columns: "Date", "Spend"
         The first column is converted to a datetime object,
-            the second column is stripped and converted to a float.
+            the second column is stripped to a float.
         """
-        cols = self.get_cols([1, 2])
-        dframe = pandas.DataFrame(cols[1:], columns=["Date", "Spend"])
+        data = self.get_sheet1()
+        first_two_columns = [row[:2] for row in data]
+        dframe = pandas.DataFrame(first_two_columns[1:], columns=["Date", "Spend"])
         dframe["Date"] = pandas.to_datetime(dframe["Date"], format="%d/%m/%Y")
-        dframe["Spend"] = dframe["Spend"].map(lambda x: re.sub(r"[^0-9\.]", "", x))
         dframe["Spend"] = pandas.to_numeric(dframe["Spend"])
         return dframe
 
@@ -86,18 +173,12 @@ class Spreadsheet:
 def main():
     # authentication
     CREDENTIALS_PATH = "google_credentials.json"
-    SPREADSHEET_ID = "18OQs6uJgoyx3zrRhb9tcnBHxpUo4OyyFJKptJHMr-D0"
-    credentials = SpreadsheetCredentials(CREDENTIALS_PATH)
+    SPREADSHEET_ID = "https://docs.google.com/spreadsheets/d/18OQs6uJgoyx3zrRhb9tcnBHxpUo4OyyFJKptJHMr-D0/edit"
+    credentials = gspread.service_account(filename=CREDENTIALS_PATH)
     spreadsheet = Spreadsheet(credentials, SPREADSHEET_ID)
 
     # data
-    columns = spreadsheet.get_cols([1, 2])
-
-    # dataframe conversion
-    df = pandas.DataFrame(columns[1:], columns=["Date", "Spend"])
-    df["Date"] = pandas.to_datetime(df["Date"], format="%d/%m/%Y")
-    df["Spend"] = df["Spend"].str.strip("£").astype(float)
-
+    df = spreadsheet.get_spending_dataframe()
     print(df)
 
 
