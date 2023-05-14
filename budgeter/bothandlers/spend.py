@@ -125,7 +125,7 @@ async def give_data(
     today = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     if next_date >= today:
         avg30d = df["Spend"].tail(30).mean()
-        avgdiff = df["Spend"].tail(31).head(30).mean() - avg30d
+        avgdiff = avg30d - df["Spend"].tail(31).head(30).mean()
         avgarrow = "⬆️" if avgdiff > 0 else "⬇️" if avgdiff < 0 else "➡️"
         await message.edit_text(
             RECORDED_FINAL_SPEND_MESSAGE.format(amount, avg30d, avgarrow, abs(avgdiff))
