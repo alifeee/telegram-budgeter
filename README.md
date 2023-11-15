@@ -1,21 +1,15 @@
 # Telegram Budgeter
 
-This is a project to run on a server or Raspberry Pi which sends me a Telegram message every day asking how much I spent the day before. The idea is to keep track of average daily spending.
+This is a project to run on a server which sends me a Telegram message every day asking how much I spent the day before. The idea is to keep track of average daily spending.
 
 ![Chat with "Bank Bot": "How much did you spend yesterday?" - "12.98" - "New average: 19.45"](images/conversation.png)
 
 ## Requirements
 
-For Google Sheets integration, many python modules are available ([gspread], [gsheets], [pygsheets], [EZSheets]). I use [gspread] as it seems up-to-date, and has a good range of [examples](https://docs.gspread.org/en/latest/user-guide.html).
-
 | Requirement | Version |
 | ----------- | ------- |
 | Python      | 3.11.1  |
-
-[gspread]: https://pypi.org/project/gspread/
-[gsheets]: https://pypi.org/project/gsheets/
-[pygsheets]: https://pypi.org/project/pygsheets/
-[EZSheets]: https://pypi.org/project/EZSheets/
+| Google Sheets | - |
 
 ## Commands
 
@@ -41,7 +35,7 @@ ptw # Run with watch
 ### Run
 
 ```bash
-python ./bot.py
+python3 ./bot.py
 ```
 
 ## Google Credentials
@@ -111,62 +105,39 @@ application = Application.builder().token(API_KEY).persistence(persistent_data).
 
 ## Deploy on remote server
 
-### Set up environment on server
+### Initial deployment
 
 ```bash
-ssh root@...
+ssh $USER@$SERVER
 cd ~/python
 git clone https://github.com/alifeee/telegram-budgeter.git
 cd telegram-budgeter
 sudo apt-get update
 sudo apt install python3.10-venv
+tmux new -s telegram_budgeter
+cd ~/python/telegram-budgeter
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
-```
-
-### Move over secrets
-
-```bash
-scp google_credentials.json root@...:~/python/telegram-budgeter/
-scp .env root@...:~/python/telegram-budgeter/
-```
-
-### Run bot
-
-```bash
-ssh root@...
-tmux
-cd ~/python/telegram-budgeter
-source env/bin/activate
-python ./bot.py
+python3 ./bot.py
 # Ctrl+B, D to detach from tmux
 ```
 
-### List tmux sessions
+#### Move over secrets
 
 ```bash
+scp google_credentials.json $USER@$SERVER:~/python/telegram-budgeter/
+scp .env $USER@$SERVER:~/python/telegram-budgeter/
+```
+
+### Update deployment
+
+```bash
+ssh $USER@$SERVER
 tmux ls
-```
-
-### Attach to tmux session
-
-```bash
-tmux attach -t 0
-```
-
-### Kill tmux session
-
-```bash
-tmux kill-session -t 0
-```
-
-### Update
-
-```bash
-ssh root@...
-cd ~/python/telegram-budgeter
+tmux attach -t telegram_budgeter
+# send ctrl+C
 git pull
+python3 ./bot.py
+# Ctrl+B, D to detach from tmux
 ```
-
-Then repeat steps in [Run](#run-bot)
