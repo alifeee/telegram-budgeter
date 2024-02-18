@@ -126,6 +126,7 @@ async def stats(
     )
 
     graph_message = await update.message.reply_text("Generating graph...")
+    graph_message_zoom = await update.message.reply_text("Generating zoomed graph...")
     try:
         figure = plt.figure()
         ax = figure.add_subplot(111)
@@ -138,6 +139,7 @@ async def stats(
 
         last_date = df["Date"].max()
         days_ago_30 = last_date - datetime.timedelta(days=30)
+        days_ago_60 = last_date - datetime.timedelta(days=60)
         ax.vlines(
             days_ago_30,
             0,
@@ -175,6 +177,25 @@ async def stats(
         await graph_message.delete()
     except Exception as e:
         await graph_message.edit_text("Error generating graph: {}".format(e))
+
+    try:
+        # set ylim to percentile 95
+        percentile_upper = df["Spend"].quantile(0.95)
+        ax.set_ylim(0, percentile_upper)
+        # set xlim to last 30 days
+        ax.set_xlim(days_ago_60, last_date)
+        figure.tight_layout()
+
+        buf = io.BytesIO()
+        figure.savefig(buf, format="png")
+        buf.seek(0)
+
+        await update.message.reply_photo(buf)
+        await graph_message_zoom.delete()
+    except Exception as e:
+        await graph_message_zoom.edit_text(
+            "Error generating zoomed graph: {}".format(e)
+        )
 
     # rolling average (only if there are more than 30 days of data)
     if len(df) < 40:
