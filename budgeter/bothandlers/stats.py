@@ -30,6 +30,13 @@ STATISTICS_MESSAGE = """
   Median spend: £{median:,.2f}
   {med_prog}
 
+<b>Last 365 days</b>:
+  Total spend: £{last365total:,.2f}
+  Average spend: £{last365average:,.2f}
+  {last365avg_prog}
+  Median spend: £{last365median:,.2f}
+  {last365med_prog}
+
 <b>Last 30 days</b>:
   Total spend: £{last30total:,.2f}
   Average spend: £{last30average:,.2f}
@@ -84,24 +91,35 @@ async def stats(
     average = df["Spend"].mean()
     median = df["Spend"].median()
 
+    last365total = df.tail(365)["Spend"].sum()
+    last365average = df.tail(365)["Spend"].mean()
+    last365median = df.tail(365)["Spend"].median()
+
     last30total = df.tail(30)["Spend"].sum()
     last30average = df.tail(30)["Spend"].mean()
     last30median = df.tail(30)["Spend"].median()
 
-    max_avg = max(average, last30average, median, last30median)
+    max_avg = max(
+        average, last365average, last30average, median, last365median, last30median
+    )
 
     await message.edit_text(
         STATISTICS_MESSAGE.format(
             totaldays=totaldays,
             total=total,
             average=average,
+            avg_prog=num_to_progress_bar(average, max_avg),
             median=median,
+            med_prog=num_to_progress_bar(median, max_avg),
+            last365total=last365total,
+            last365average=last365average,
+            last365avg_prog=num_to_progress_bar(last365average, max_avg),
+            last365median=last365median,
+            last365med_prog=num_to_progress_bar(last365median, max_avg),
             last30total=last30total,
             last30average=last30average,
-            last30median=last30median,
-            avg_prog=num_to_progress_bar(average, max_avg),
-            med_prog=num_to_progress_bar(median, max_avg),
             last30avg_prog=num_to_progress_bar(last30average, max_avg),
+            last30median=last30median,
             last30med_prog=num_to_progress_bar(last30median, max_avg),
         ),
         parse_mode="HTML",
