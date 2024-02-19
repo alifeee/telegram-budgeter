@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily budgeter bot using Telegram
+After=network.target
+
+[Service]
+ExecStart=/root/python/telegram-budgeter/env/bin/python bot.py
+WorkingDirectory=/root/python/telegram-budgeter
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

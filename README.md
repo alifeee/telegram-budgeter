@@ -114,13 +114,15 @@ git clone https://github.com/alifeee/telegram-budgeter.git
 cd telegram-budgeter
 sudo apt-get update
 sudo apt install python3.10-venv
-tmux new -s telegram_budgeter
+
 cd ~/python/telegram-budgeter
 python3 -m venv env
-source env/bin/activate
 pip install -r requirements.txt
-python3 ./bot.py
-# Ctrl+B, D to detach from tmux
+# set up service
+cp telegram-budgeter.service /etc/systemd/system/telegram-budgeter.service
+sudo systemctl enable telegram-budgeter.service
+sudo systemctl start telegram-budgeter.service
+sudo systemctl status telegram-budgeter.service
 ```
 
 #### Move over secrets
@@ -134,10 +136,7 @@ scp .env $USER@$SERVER:~/python/telegram-budgeter/
 
 ```bash
 ssh $USER@$SERVER
-tmux ls
-tmux attach -t telegram_budgeter
-# send ctrl+C
+cd ~/python/telegram-budgeter
 git pull
-python3 ./bot.py
-# Ctrl+B, D to detach from tmux
+# repeat "set up service" above
 ```
