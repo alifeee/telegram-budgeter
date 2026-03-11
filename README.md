@@ -1,3 +1,5 @@
+> [!CAUTION]
+> MOVED! see <https://git.alifeee.net/telegram-budgeter/about/>
 # Telegram Budgeter
 
 This is a project to run on a server which sends me a Telegram message every day asking how much I spent the day before. The idea is to keep track of average daily spending.
